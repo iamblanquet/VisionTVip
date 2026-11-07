@@ -1,0 +1,26 @@
+# Built application files
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Gradle & Kotlin caches / build outputs
+.gradle/
+.kotlin/
+build/
+app/build/
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+.cxx/
+captures/
+.externalNativeBuild/
+.navigation/
+
+# Keep Gradle Wrapper & Project Keystore for CI/CD OTA compatibility
+!gradle/wrapper/gradle-wrapper.jar
+!app/visiontv.keystore
