@@ -77,6 +77,7 @@ import com.dahua.tvviewer.ui.P2pTunnelUiState
 import com.dahua.tvviewer.ui.components.RtspPlayerTile
 import com.dahua.tvviewer.ui.components.TvIconButton
 import com.dahua.tvviewer.ui.components.VisionTvBackground
+import kotlinx.coroutines.delay
 
 @Composable
 fun CameraGridScreen(
@@ -622,6 +623,17 @@ private fun CameraCardCell(
     modifier: Modifier = Modifier
 ) {
     var isFocused by remember { mutableStateOf(false) }
+    var showImmersiveFocus by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isFocused, isImmersiveGrid) {
+        if (isFocused && isImmersiveGrid) {
+            showImmersiveFocus = true
+            delay(2500L)
+            showImmersiveFocus = false
+        } else {
+            showImmersiveFocus = false
+        }
+    }
 
     val borderColor by animateColorAsState(
         targetValue = when {
@@ -641,8 +653,12 @@ private fun CameraCardCell(
             .clip(cellShape)
             .background(Color(0xFF07111D))
             .then(
-                if (isImmersiveGrid) Modifier
-                else Modifier.border(borderWidth, borderColor, cellShape)
+                if (isImmersiveGrid) {
+                    if (showImmersiveFocus) Modifier.border(2.5.dp, Color(0xFF00E5FF), cellShape)
+                    else Modifier
+                } else {
+                    Modifier.border(borderWidth, borderColor, cellShape)
+                }
             )
             .onFocusChanged { isFocused = it.isFocused }
             .onKeyEvent { event ->

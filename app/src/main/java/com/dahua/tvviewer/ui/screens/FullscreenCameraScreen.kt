@@ -77,6 +77,7 @@ fun FullscreenCameraScreen(
 ) {
     // Show controls by default on open so user sees channel info & buttons
     var controlsVisible by remember { mutableStateOf(true) }
+    var isTopBarFocused by remember { mutableStateOf(false) }
     var interactionTick by remember { mutableIntStateOf(0) }
     var retryTrigger by remember { mutableIntStateOf(0) }
 
@@ -92,11 +93,14 @@ fun FullscreenCameraScreen(
         onBackToGrid()
     }
 
-    // Auto-focus screen container on entry so TV remote D-pad keys work immediately
-    LaunchedEffect(Unit) {
-        try {
-            screenFocusRequester.requestFocus()
-        } catch (_: Exception) {}
+    // Auto-focus screen container on entry or when HUD hides so TV remote D-pad arrows always work
+    LaunchedEffect(controlsVisible, channelNumber) {
+        if (!controlsVisible || !isTopBarFocused) {
+            isTopBarFocused = false
+            try {
+                screenFocusRequester.requestFocus()
+            } catch (_: Exception) {}
+        }
     }
 
     // Auto-hide floating controls after 5 seconds of inactivity
@@ -104,6 +108,7 @@ fun FullscreenCameraScreen(
         if (controlsVisible) {
             delay(5000L)
             controlsVisible = false
+            isTopBarFocused = false
         }
     }
 
@@ -113,7 +118,7 @@ fun FullscreenCameraScreen(
             .background(Color.Black)
             .focusRequester(screenFocusRequester)
             .focusable()
-            // TV Remote Control: Smart D-pad navigation & channel switching
+            // TV Remote Control: Left/Right arrows switch cameras directly unless user pressed Up to focus Top Bar
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown) {
                     interactionTick += 1
@@ -129,10 +134,9 @@ fun FullscreenCameraScreen(
                             controlsVisible = true
                             true
                         }
-                        // Left / Right arrows switch channel when controls are hidden;
-                        // when controls are visible, let TV focus move freely between the buttons!
+                        // Left / Right arrows switch camera immediately unless user navigated Up into the Top Bar
                         Key.DirectionLeft -> {
-                            if (!controlsVisible) {
+                            if (!isTopBarFocused) {
                                 onSwitchChannel(-1)
                                 controlsVisible = true
                                 true
@@ -141,7 +145,7 @@ fun FullscreenCameraScreen(
                             }
                         }
                         Key.DirectionRight -> {
-                            if (!controlsVisible) {
+                            if (!isTopBarFocused) {
                                 onSwitchChannel(1)
                                 controlsVisible = true
                                 true
@@ -149,20 +153,10 @@ fun FullscreenCameraScreen(
                                 false
                             }
                         }
-                        Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
-                            if (!controlsVisible) {
-                                controlsVisible = true
-                                try {
-                                    backButtonFocusRequester.requestFocus()
-                                } catch (_: Exception) {}
-                                true
-                            } else {
-                                false
-                            }
-                        }
                         Key.DirectionUp -> {
-                            if (!controlsVisible) {
-                                controlsVisible = true
+                            controlsVisible = true
+                            if (!isTopBarFocused) {
+                                isTopBarFocused = true
                                 try {
                                     backButtonFocusRequester.requestFocus()
                                 } catch (_: Exception) {}
@@ -172,8 +166,30 @@ fun FullscreenCameraScreen(
                             }
                         }
                         Key.DirectionDown -> {
+                            controlsVisible = true
+                            if (isTopBarFocused) {
+                                isTopBarFocused = false
+                                try {
+                                    screenFocusRequester.requestFocus()
+                                } catch (_: Exception) {}
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                        Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
                             if (!controlsVisible) {
                                 controlsVisible = true
+                                isTopBarFocused = true
+                                try {
+                                    backButtonFocusRequester.requestFocus()
+                                } catch (_: Exception) {}
+                                true
+                            } else if (!isTopBarFocused) {
+                                isTopBarFocused = true
+                                try {
+                                    backButtonFocusRequester.requestFocus()
+                                } catch (_: Exception) {}
                                 true
                             } else {
                                 false
