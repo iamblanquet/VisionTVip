@@ -342,6 +342,35 @@ fun RtspPlayerTile(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
+                    addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                        val newW = right - left
+                        val newH = bottom - top
+                        val oldW = oldRight - oldLeft
+                        val oldH = oldBottom - oldTop
+                        if (newW > 0 && newH > 0 && (newW != oldW || newH != oldH)) {
+                            surfaceWidth = newW
+                            surfaceHeight = newH
+                            try {
+                                mediaPlayer.vlcVout.setWindowSize(newW, newH)
+                                mediaPlayer.aspectRatio = "$newW:$newH"
+                                mediaPlayer.scale = 0f
+                            } catch (_: Exception) {}
+                            coroutineScope.launch {
+                                delay(50L)
+                                try {
+                                    mediaPlayer.vlcVout.setWindowSize(newW, newH)
+                                    mediaPlayer.aspectRatio = "$newW:$newH"
+                                    mediaPlayer.scale = 0f
+                                } catch (_: Exception) {}
+                                delay(150L)
+                                try {
+                                    mediaPlayer.vlcVout.setWindowSize(newW, newH)
+                                    mediaPlayer.aspectRatio = "$newW:$newH"
+                                    mediaPlayer.scale = 0f
+                                } catch (_: Exception) {}
+                            }
+                        }
+                    }
                     surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                         override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
                             try {
@@ -349,7 +378,7 @@ fun RtspPlayerTile(
                                 surfaceHeight = height
                                 val vout = mediaPlayer.vlcVout
                                 if (!vout.areViewsAttached()) {
-                                    vout.setVideoView(this@apply)
+                                    vout.setVideoSurface(surface)
                                     vout.attachViews()
                                 }
                                 vout.setWindowSize(width, height)
@@ -371,11 +400,6 @@ fun RtspPlayerTile(
                                 surfaceWidth = width
                                 surfaceHeight = height
                                 val vout = mediaPlayer.vlcVout
-                                if (vout.areViewsAttached()) {
-                                    vout.detachViews()
-                                    vout.setVideoView(this@apply)
-                                    vout.attachViews()
-                                }
                                 vout.setWindowSize(width, height)
                                 if (width > 0 && height > 0) {
                                     mediaPlayer.aspectRatio = "$width:$height"
@@ -398,12 +422,24 @@ fun RtspPlayerTile(
                         }
 
                         override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+                            val currentW = this@apply.width
+                            val currentH = this@apply.height
+                            if (currentW > 0 && currentH > 0 && (currentW != surfaceWidth || currentH != surfaceHeight)) {
+                                surfaceWidth = currentW
+                                surfaceHeight = currentH
+                                try {
+                                    mediaPlayer.vlcVout.setWindowSize(currentW, currentH)
+                                    mediaPlayer.aspectRatio = "$currentW:$currentH"
+                                    mediaPlayer.scale = 0f
+                                } catch (_: Exception) {}
+                            }
                             if (status != StreamStatus.LIVE) {
                                 status = StreamStatus.LIVE
                                 errorMessage = null
                                 onSignalStatusChanged?.invoke(channelNumber, true)
                                 if (surfaceWidth > 0 && surfaceHeight > 0) {
                                     try {
+                                        mediaPlayer.vlcVout.setWindowSize(surfaceWidth, surfaceHeight)
                                         mediaPlayer.aspectRatio = "$surfaceWidth:$surfaceHeight"
                                         mediaPlayer.scale = 0f
                                     } catch (_: Exception) {}
@@ -412,13 +448,13 @@ fun RtspPlayerTile(
                         }
                     }
 
-                    if (isAvailable) {
+                    if (isAvailable && surfaceTexture != null) {
                         try {
                             surfaceWidth = width
                             surfaceHeight = height
                             val vout = mediaPlayer.vlcVout
                             if (!vout.areViewsAttached()) {
-                                vout.setVideoView(this)
+                                vout.setVideoSurface(surfaceTexture!!)
                                 vout.attachViews()
                             }
                             vout.setWindowSize(width, height)

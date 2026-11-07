@@ -275,19 +275,31 @@ fun TvIconButton(
     icon: ImageVector,
     contentDescription: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false
 ) {
     var isFocused by remember { mutableStateOf(false) }
+
+    val bgColor = when {
+        isFocused -> Color(0xFF00E5FF)
+        isSelected -> Color(0xFF0066FF)
+        else -> Color(0xFF1E293B)
+    }
+    val borderColor = when {
+        isFocused -> Color.White
+        isSelected -> Color(0xFF38BDF8)
+        else -> Color(0xFF334155)
+    }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .size(36.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isFocused) Color(0xFF00E5FF) else Color(0xFF1E293B))
+            .background(bgColor)
             .border(
                 width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) Color.White else Color(0xFF334155),
+                color = borderColor,
                 shape = RoundedCornerShape(8.dp)
             )
             .onFocusChanged { isFocused = it.isFocused }

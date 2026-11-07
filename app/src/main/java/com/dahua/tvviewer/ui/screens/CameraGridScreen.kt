@@ -216,16 +216,16 @@ fun CameraGridScreen(
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            // Quick Organize Grid Button (Accessible to ANY user without Admin PIN)
-                            TvActionButton(
-                                label = if (isOrganizeMode) "✓ Listo" else "Organizar",
-                                icon = Icons.Default.SwapHoriz,
+                            // Quick Organize Grid Icon Button (Accessible to ANY user without Admin PIN)
+                            TvIconButton(
+                                icon = if (isOrganizeMode) Icons.Default.CheckCircle else Icons.Default.SwapHoriz,
+                                contentDescription = if (isOrganizeMode) "Terminar de organizar" else "Organizar cuadrícula",
                                 isSelected = isOrganizeMode,
                                 onClick = {
                                     isOrganizeMode = !isOrganizeMode
                                     selectedSwapChannel = null
                                 },
-                                modifier = Modifier.height(34.dp)
+                                modifier = Modifier.size(36.dp)
                             )
 
                             Spacer(modifier = Modifier.width(6.dp))
@@ -235,22 +235,21 @@ fun CameraGridScreen(
                                 label = if (isGridMainStream) "HD" else "SD",
                                 isSelected = isGridMainStream,
                                 onClick = { isGridMainStream = !isGridMainStream },
-                                modifier = Modifier.height(34.dp)
+                                modifier = Modifier.height(36.dp)
                             )
 
                             Spacer(modifier = Modifier.width(6.dp))
 
-                            // Fullscreen Grid Button (Hides Top Bar; Back button restores normal grid)
-                            TvActionButton(
-                                label = "Pantalla Completa",
+                            // Fullscreen Grid Icon Button (Hides Top Bar; Back button restores normal grid)
+                            TvIconButton(
                                 icon = Icons.Default.Fullscreen,
-                                isSelected = false,
+                                contentDescription = "Cuadrícula en pantalla completa",
                                 onClick = {
                                     isOrganizeMode = false
                                     selectedSwapChannel = null
                                     isImmersiveGrid = true
                                 },
-                                modifier = Modifier.height(34.dp)
+                                modifier = Modifier.size(36.dp)
                             )
                         }
 
@@ -298,23 +297,6 @@ fun CameraGridScreen(
                                 onClick = onRunDiagnostic,
                                 modifier = Modifier.size(36.dp)
                             )
-
-                            if (updateState is AppUpdateState.UpdateAvailable) {
-                                TvActionButton(
-                                    label = "Actualizar v${updateState.release.versionClean}",
-                                    icon = Icons.Default.SystemUpdateAlt,
-                                    isSelected = true,
-                                    onClick = onOpenUpdateDialog,
-                                    modifier = Modifier.height(36.dp)
-                                )
-                            } else {
-                                TvIconButton(
-                                    icon = Icons.Default.SystemUpdateAlt,
-                                    contentDescription = "Buscar actualización en GitHub",
-                                    onClick = onOpenUpdateDialog,
-                                    modifier = Modifier.size(36.dp)
-                                )
-                            }
 
                             TvIconButton(
                                 icon = Icons.Default.Settings,
@@ -769,8 +751,8 @@ private fun CameraCardCell(
                 }
             }
         } else {
-            // Sleek Minimalist Corner Expand Indicator on Focus / Touch
-            if (isFocused) {
+            // Sleek Minimalist Corner Expand Indicator on Focus / Touch (only in normal grid)
+            if (isFocused && !isImmersiveGrid) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)

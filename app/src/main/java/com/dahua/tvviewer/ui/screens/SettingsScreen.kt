@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -96,6 +97,7 @@ fun SettingsScreen(
     onTestConnection: (ConnectionMethod, String, String, String, String, Int, Int) -> Unit,
     onSaveConfig: (NvrConfig) -> Unit,
     onResetConfig: () -> Unit,
+    onOpenUpdateDialog: () -> Unit = {},
     onCancel: () -> Unit
 ) {
     // Current wizard step: 1: Conexión -> 2: Credenciales -> 3: Canales -> 4: Resumen y Prueba
@@ -229,7 +231,17 @@ fun SettingsScreen(
                         }
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                    TvIconButton(
+                        icon = Icons.Default.SystemUpdateAlt,
+                        contentDescription = "Buscar actualización en GitHub",
+                        onClick = onOpenUpdateDialog,
+                        modifier = Modifier.size(38.dp)
+                    )
+
                     TvButton(
                         label = "Limpiar Todo",
                         icon = Icons.Default.DeleteSweep,

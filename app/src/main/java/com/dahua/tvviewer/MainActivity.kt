@@ -1,11 +1,15 @@
 package com.dahua.tvviewer
 
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,12 +49,34 @@ class MainActivity : ComponentActivity() {
 
         // Keep TV screen awake while viewing live security cameras
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
+        hideSystemBars()
 
         setContent {
             MaterialTheme(colorScheme = TvDarkColorScheme) {
                 DahuaTvApp(viewModel = viewModel)
             }
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemBars()
+        }
+    }
+
+    private fun hideSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -142,6 +168,7 @@ fun DahuaTvApp(viewModel: MainViewModel) {
                 },
                 onSaveConfig = { newConfig -> viewModel.saveNvrConfig(newConfig, navigateAfterSave = true) },
                 onResetConfig = { viewModel.resetConfig() },
+                onOpenUpdateDialog = { viewModel.openUpdateDialog() },
                 onCancel = { viewModel.navigateToGrid() }
             )
         }
